@@ -1,15 +1,15 @@
 const AI_BASE_URL = "http://localhost:8000/agent/dummy";
 
-export async function updateAiWeights(weights: {
-    create4: int
-    create3: int
-    create2: int
-    create1: int
-    block3: int
-    block2: int
-    block1: int
+export async function updateDummyAIWeights(weights: {
+    depth: number
+    create4: number
+    create3: number
+    create2: number
+    opponent4: number
+    opponent3: number
+    opponent2: number
 }) {
-  const res = await fetch(`${AI_BASE_URL}/update-weights`, {
+  const res = await fetch(`${AI_BASE_URL}/update-dummy-weights`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(weights),
@@ -26,3 +26,4 @@ export async function getDummyMove(board: number[][]) {
   const data = await res.json();
   return data.column;
 }
+

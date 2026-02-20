@@ -6,7 +6,7 @@ router = APIRouter(prefix="/agent/dummy", tags=["connect4"])
 
 sim_agent = DummyConnect4Agent(name="Training_Dummy")
 
-@router.post("/update-weights")
+@router.post("/update-dummy-weights")
 async def update_weights(weights: Connect4AIWeights):
     sim_agent.update_weights(weights.model_dump())
     return {"status": "success", "current_weights": sim_agent.weights}
