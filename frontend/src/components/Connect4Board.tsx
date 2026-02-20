@@ -15,11 +15,9 @@ export default function Connect4Board() {
       create4: 1,
       create3: 1,
       create2: 1,
-      create1: 1,
-      block4: 1,
-      block3: 1,
-      block2: 1,
-      block1: 1
+      opponent4: 1,
+      opponent3: 1,
+      opponent2: 1,
     });
 
 
@@ -93,7 +91,7 @@ export default function Connect4Board() {
           let col;
           
           if (isMinimaxTurn) {
-              const scoresMap = await getMinimaxColScores(board);
+              const scoresMap = await getMinimaxColScores(board, 1);
               setCurrentScores(scoresMap);
               col = getBestMove(scoresMap);
           } else {
@@ -121,7 +119,7 @@ export default function Connect4Board() {
     // Timer only runs in AI vs AI
     useEffect(() => {
       if (gameMode !== "AI_VS_DUMMY") {
-        setIsSimulating(false);
+        setIsSimulating(true);
         
       }else {
         setIsSimulating(true);
@@ -144,7 +142,7 @@ export default function Connect4Board() {
     }
 
 
-    const [timeLeft, setTimeLeft] = useState(90);
+    const [timeLeft, setTimeLeft] = useState(300);
 
     useEffect(() => {
       if (timeLeft > 0) {
@@ -176,8 +174,9 @@ export default function Connect4Board() {
       setIsLoading(false);
     } else {
       // Minimax move
-      const scoresMap = await getMinimaxColScores(data.board);
+      const scoresMap = await getMinimaxColScores(data.board, -1);
       setCurrentScores(scoresMap);
+      
       const bestCol = getBestMove(scoresMap);
 
       const aiData = await makeMove(bestCol);
@@ -208,18 +207,24 @@ export default function Connect4Board() {
 
         <h3>Game Mode</h3>
         <button
-          onClick={() => setGameMode("PLAYER_VS_AI")}
+          onClick={() => {
+            setGameMode("PLAYER_VS_AI");
+            handleReset();
+          }}
           disabled={gameMode === "PLAYER_VS_AI"}
         >
-          Player vs Dummy AI
+          Player vs AI
         </button>
 
         <button
-          onClick={() => setGameMode("AI_VS_DUMMY")}
+          onClick={() => {
+            setGameMode("AI_VS_DUMMY");
+            handleReset();
+          }}
           disabled={gameMode === "AI_VS_DUMMY"}
           style={{ marginLeft: "10px" }}
         >
-          Dummy AI vs Dummy AI
+          AI vs Dummy AI
         </button>
 
         <h3>AI Personality</h3>

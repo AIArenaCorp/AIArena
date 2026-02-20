@@ -5,11 +5,9 @@ class Connect4AIWeights(BaseModel):
     create4: int
     create3: int
     create2: int
-    create1: int
-    block4: int
-    block3: int
-    block2: int
-    block1: int
+    opponent4: int
+    opponent3: int
+    opponent2: int
 
     @field_validator('*')
     @classmethod

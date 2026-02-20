@@ -13,8 +13,7 @@ async def update_weights(weights: Connect4AIWeights):
     return {"status": "success", "current_weights": sim_agent.weights}
 
 @router.post("/get-scores")
-async def get_scores(board: list[list[int]] = Body(...)):
-    print("getting scores for board:")
-    col_scores = sim_agent.get_col_scores(board)
-    print(f"Calculated scores: {col_scores}")
-    return col_scores
+async def get_scores(board: list[list[int]] = Body(...), ai_piece: int = Body(...),):
+    agent = MiniMaxConnect4Agent(name="MinimaxAgent", piece=ai_piece)
+    agent.update_weights(sim_agent.weights)
+    return agent.get_col_scores(board)

@@ -5,11 +5,9 @@ export async function updateDummyAIWeights(weights: {
     create4: number
     create3: number
     create2: number
-    create1: number
-    block4: number
-    block3: number
-    block2: number
-    block1: number
+    opponent4: number
+    opponent3: number
+    opponent2: number
 }) {
   const res = await fetch(`${AI_BASE_URL}/update-dummy-weights`, {
     method: "POST",

@@ -4,7 +4,7 @@ import random
 class DummyConnect4Agent:
     def __init__(self, name: str):
         self.name = name
-        self.weights = {"complete3": 0, "complete2": 0, "block3": 0, "block2": 0}
+        self.weights = {"complete3": 0, "complete2": 0, "opponent3": 0, "opponent2": 0}
 
     def update_weights(self, new_weights: dict):
         self.weights.update(new_weights)
