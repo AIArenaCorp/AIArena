@@ -1,10 +1,12 @@
 from pydantic import BaseModel, field_validator
 
 class Connect4AIWeights(BaseModel):
+    depth: int
     create4: int
     create3: int
     create2: int
     create1: int
+    block4: int
     block3: int
     block2: int
     block1: int
