@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getBoard, makeMove, resetGame } from "../api/connect4";
 import { getDummyMove, updateDummyAIWeights } from "../api/c4_dummy_agent";
-import { getMinimaxColScores, updateMinimaxWeights } from "../api/c4_minimax_agent";
+import { getMinimaxColScores, updateMinimaxWeights, submitAIBot } from "../api/c4_minimax_agent";
 
 // add a block 4 column, instead of 2 dummys i should be the mini max agent, 
 export default function Connect4Board() {
@@ -10,6 +10,9 @@ export default function Connect4Board() {
   const [winner, setWinner] = useState<number | null>(null);
   const [gameMode, setGameMode] = useState<"PLAYER_VS_AI" | "AI_VS_DUMMY">("PLAYER_VS_AI");
   const [currentScores, setCurrentScores] = useState<Record<string, number>>({});
+  const [botName, setBotName] = useState("MyBot");
+  const [username, setUsername] = useState("User");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [weights, setWeights] = useState({
       depth: 1,
       create4: 1,
@@ -49,7 +52,19 @@ export default function Connect4Board() {
     // If the map was empty (no moves), default to a safe value or handle appropriately
     return bestCol !== -1 ? bestCol : 0;
   }
-
+  async function handleSubmit(e: React.FormEvent) {
+      setIsSubmitting(true);
+      e.preventDefault();
+      try {
+        const result = await submitAIBot(username, botName, weights);
+        alert(result.status);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to submit bot.");
+      } finally {
+        setIsSubmitting(false);
+      }
+  }
   async function handleFinalizeAI() {
     console.log("Time is up! AI personality is locked.");
     setGameMode("PLAYER_VS_AI");
@@ -241,6 +256,42 @@ export default function Connect4Board() {
             />
           </div>
         ))}
+    <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+      <h3>Submit to Leaderboard</h3>
+      <input
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        style={{ display: 'block', marginBottom: '5px', width: '100%' }}
+      />
+      <input
+        placeholder="Bot Name"
+        value={botName}
+        onChange={(e) => setBotName(e.target.value)}
+        style={{ display: 'block', marginBottom: '10px', width: '100%' }}
+      />
+
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting || remaining !== 0}
+        style={{
+          width: '100%',
+          backgroundColor: remaining === 0 ? '#4CAF50' : '#ccc',
+          color: 'white',
+          padding: '10px',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: remaining === 0 ? 'pointer' : 'not-allowed'
+        }}
+      >
+        {isSubmitting ? "Submitting..." : "ENTER ARENA"}
+      </button>
+      {remaining !== 0 && (
+        <p style={{ fontSize: '10px', color: 'red' }}>
+          * Spend exactly 300 points to submit.
+        </p>
+      )}
+    </div>
       <button onClick={handleReset}>Reset Game</button>
     </div>
 

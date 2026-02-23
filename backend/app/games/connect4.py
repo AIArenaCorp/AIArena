@@ -30,10 +30,14 @@ class Connect4(Game):
                 board[row][column] = player
                 if self.check_winner(row, column, player):
                     return "win", player
+                if self.check_tie(self.gamestate):
+                    return "tie", 0
                 self.currentTurn = -player
                 return row, column
 
         return 0, 0
+    def check_tie(self, gamestate):
+        return all(gamestate[i][j] != 0 for i in range(self.ROWS) for j in range(self.COLS))
 
     def check_winner(self, row, col, player):
         board = self.gamestate

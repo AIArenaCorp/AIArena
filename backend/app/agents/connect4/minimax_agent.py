@@ -53,11 +53,11 @@ class MiniMaxConnect4Agent:
             score = self.minimax(branch_board, 1, False)
             col_scores[col] = score
 
-        print(f"weights {self.weights}")
-        print("pretty gamestate:")
-        for row in gamestate:
-            print(row)
-        print(f"col scores: {col_scores}")
+        # print(f"weights {self.weights}")
+        # print("pretty gamestate:")
+        # for row in gamestate:
+        #     print(row)
+        # print(f"col scores: {col_scores}")
         return col_scores
 
 

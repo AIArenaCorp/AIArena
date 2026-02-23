@@ -15,3 +15,9 @@ class Connect4AIWeights(BaseModel):
         if v < 0:
             raise ValueError("Weights cannot be negative")
         return v
+
+
+class UserSubmission(BaseModel):
+    username: str
+    bot_name: str
+    weights: Connect4AIWeights
