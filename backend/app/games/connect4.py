@@ -20,7 +20,7 @@ class Connect4(Game):
     def play_turn(self, column):
         column = max(0, min(self.COLS - 1, column))
         if self.gamestate[0][column] != 0:
-            return 0, column
+            return -1, column
 
         board = self.gamestate
         player = self.currentTurn
