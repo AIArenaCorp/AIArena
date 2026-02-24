@@ -1,6 +1,5 @@
 const BASE_URL = "http://localhost:8000/leaderboard";
 
-export async function getLeaderboard() {
-  const res = await fetch(`${BASE_URL}/get-leaderboard`);
-  return res.json();
-}
+export const getLeaderboard = (limit = 10, offset = 0) =>
+  fetch(`${BASE_URL}/get-leaderboard?limit=${limit}&offset=${offset}`)
+    .then(r => r.json());

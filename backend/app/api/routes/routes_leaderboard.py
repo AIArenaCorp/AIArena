@@ -6,13 +6,20 @@ from backend.app.agents.connect4.validator import UserSubmission
 router = APIRouter(prefix="/leaderboard", tags=["connect4"])
 
 @router.get("/get-leaderboard")
-async def get_leaderboard():
+async def get_leaderboard(limit: int = 10, offset: int = 0):
     db = get_database()
 
-    cursor = db.agents.find({}, {"_id": 0}).sort("elo", -1).limit(50)
-    leaderboard_data = await cursor.to_list(length=50)
+    cursor = db.agents.find({}, {"_id": 0}).sort("elo", -1).skip(offset).limit(limit)
+    leaderboard_data = await cursor.to_list(length=limit)
 
-    return {"leaderboard": leaderboard_data}
+    total = await db.agents.count_documents({})
+
+    return {
+        "leaderboard": leaderboard_data,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.post("/submit-bot")
@@ -44,7 +51,7 @@ async def run_gauntlet(bot_name: str):
         result = run_battle(new_bot['weights'], opp['weights'])
 
         new_bot_elo, opp_elo = calculate_elo(new_bot['elo'], opp['elo'], result)
-        print(f"{bot_name}'s new elo = {new_bot_elo}, {opp['bot_name']}'s new elo: {opp_elo}")
+        print(f"{bot_name}'s new elo = {new_bot_elo} from {new_bot['elo']}, {opp['bot_name']}'s new elo: {opp_elo} from {opp['elo']}")
 
         await db.agents.update_one({"bot_name": bot_name}, {"$set": {"elo": new_bot_elo}})
         await db.agents.update_one({"bot_name": opp['bot_name']}, {"$set": {"elo": opp_elo}})
