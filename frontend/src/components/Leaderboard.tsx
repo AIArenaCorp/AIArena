@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getLeaderboard } from "../api/leaderboard";
+import ChallengeModal from "./ChallengeModal";
 
 const BASE_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600&display=swap');
@@ -12,7 +13,7 @@ const BASE_STYLES = `
 
   .lb-header {
     display: grid;
-    grid-template-columns: 56px 1fr 1fr 100px;
+    grid-template-columns: 56px 1fr 1fr 100px 40px;
     padding: 0 16px 10px;
     border-bottom: 1px solid var(--lb-border);
   }
@@ -36,7 +37,7 @@ const BASE_STYLES = `
 
   .lb-row {
     display: grid;
-    grid-template-columns: 56px 1fr 1fr 100px;
+    grid-template-columns: 56px 1fr 1fr 100px 40px;
     align-items: center;
     padding: 12px 16px;
     border-radius: 8px;
@@ -45,6 +46,7 @@ const BASE_STYLES = `
     transition: all 0.18s;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
   }
 
   .lb-row::before {
@@ -54,12 +56,18 @@ const BASE_STYLES = `
     width: 2px;
     border-radius: 2px 0 0 2px;
     background: transparent;
+    transition: background 0.2s;
   }
 
   .lb-row:hover {
     border-color: var(--lb-border);
     background: var(--lb-row-hover-bg);
     transform: translateX(2px);
+  }
+
+  .lb-row:hover .lb-challenge-btn {
+    opacity: 1;
+    transform: scale(1);
   }
 
   .lb-row.rank-1::before { background: #ffd600; }
@@ -113,6 +121,17 @@ const BASE_STYLES = `
     color: var(--lb-green);
     text-align: right;
     text-shadow: 0 0 10px var(--lb-green-glow);
+  }
+
+  .lb-challenge-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.15s, transform 0.15s;
+    color: var(--lb-accent);
   }
 
   .lb-state {
@@ -195,6 +214,46 @@ const BASE_STYLES = `
     display: inline-block;
     animation: lbSpin 0.7s linear infinite;
   }
+
+  .lb-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .lb-page-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    border: 1px solid var(--lb-border);
+    background: transparent;
+    color: var(--lb-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+  }
+
+  .lb-page-btn:hover:not(:disabled):not(.active) {
+    border-color: var(--lb-accent);
+    color: var(--lb-text);
+    background: var(--lb-row-bg);
+  }
+
+  .lb-page-btn.active {
+    border-color: var(--lb-accent);
+    background: var(--lb-row-bg);
+    color: var(--lb-accent);
+  }
+
+  .lb-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 `;
 
 const DARK_TOKENS = `
@@ -225,25 +284,45 @@ const LIGHT_TOKENS = `
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-type Bot = { bot_name: string; username: string; elo: number; };
-type Status = 'loading' | 'loaded' | 'error' | 'empty';
+export type Bot = {
+  bot_name: string;
+  username: string;
+  elo: number;
+  weights?: {
+    depth: number; create4: number; create3: number; create2: number;
+    opponent4: number; opponent3: number; opponent2: number;
+  };
+};
 
+type Status = 'loading' | 'loaded' | 'error' | 'empty';
 type Props = { isDark?: boolean };
 
+// ✅ PAGE_SIZE is a module-level constant — fine outside the component
+const PAGE_SIZE = 10;
+
 const LeaderboardTable = ({ isDark = false }: Props) => {
+  // ✅ All useState calls are inside the component
   const [data, setData] = useState<Bot[]>([]);
   const [status, setStatus] = useState<Status>('loading');
+  const [challengeBot, setChallengeBot] = useState<Bot | null>(null);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
 
-  const fetchLeaders = async () => {
+  // ✅ Derived value — not a hook, just math
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const fetchLeaders = async (p: number) => {
     setStatus('loading');
     try {
-      const result = await getLeaderboard();
-      if (result && Array.isArray(result.leaderboard) && result.leaderboard.length > 0) {
+      const result = await getLeaderboard(PAGE_SIZE, p * PAGE_SIZE);
+      if (result?.leaderboard?.length > 0) {
         setData(result.leaderboard);
+        setTotal(result.total ?? 0);
         setStatus('loaded');
       } else {
         setData([]);
-        setStatus('empty');
+        setTotal(result.total ?? 0);
+        setStatus(p === 0 ? 'empty' : 'loaded');
       }
     } catch (error) {
       console.error("Leaderboard fetch failed:", error);
@@ -252,10 +331,10 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
     }
   };
 
-  useEffect(() => { fetchLeaders(); }, []);
+  useEffect(() => { fetchLeaders(page); }, [page]);
 
-  const rankClass = (i: number) =>
-    i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+  const rankClass = (globalIndex: number) =>
+    globalIndex === 0 ? 'rank-1' : globalIndex === 1 ? 'rank-2' : globalIndex === 2 ? 'rank-3' : '';
 
   return (
     <>
@@ -267,6 +346,7 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
           <div className="lb-header-cell">Bot</div>
           <div className="lb-header-cell">Creator</div>
           <div className="lb-header-cell right">Elo</div>
+          <div className="lb-header-cell" />
         </div>
 
         {status === 'loading' && (
@@ -292,29 +372,80 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
 
         {status === 'loaded' && (
           <div className="lb-list">
-            {data.map((bot, i) => (
-              <div key={i} className={`lb-row ${rankClass(i)}`}>
-                <div className={`lb-rank ${rankClass(i)}`}>
-                  {MEDALS[i + 1]
-                    ? <span className="lb-medal">{MEDALS[i + 1]}</span>
-                    : `#${i + 1}`
-                  }
+            {data.map((bot, i) => {
+              const globalRank = page * PAGE_SIZE + i;
+              const rc = rankClass(globalRank);
+              return (
+                <div
+                  key={globalRank}
+                  className={`lb-row ${rc}`}
+                  onClick={() => setChallengeBot(bot)}
+                  title={`Challenge ${bot.bot_name}`}
+                >
+                  <div className={`lb-rank ${rc}`}>
+                    {MEDALS[globalRank + 1]
+                      ? <span className="lb-medal">{MEDALS[globalRank + 1]}</span>
+                      : `#${globalRank + 1}`
+                    }
+                  </div>
+                  <div className="lb-bot">{bot.bot_name}</div>
+                  <div className="lb-creator">{bot.username}</div>
+                  <div className="lb-elo">{Math.round(bot.elo)}</div>
+                  <div className="lb-challenge-btn" title="Challenge">⚔️</div>
                 </div>
-                <div className="lb-bot">{bot.bot_name}</div>
-                <div className="lb-creator">{bot.username}</div>
-                <div className="lb-elo">{Math.round(bot.elo)}</div>
-              </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination — only shown when there's more than one page */}
+        {status === 'loaded' && totalPages > 1 && (
+          <div className="lb-pagination">
+            <button
+              className="lb-page-btn"
+              onClick={() => setPage(0)}
+              disabled={page === 0}
+              title="First page"
+            >«</button>
+            <button
+              className="lb-page-btn"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 0}
+              title="Previous page"
+            >‹</button>
+
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                className={`lb-page-btn ${i === page ? 'active' : ''}`}
+                onClick={() => setPage(i)}
+              >{i + 1}</button>
             ))}
+
+            <button
+              className="lb-page-btn"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page === totalPages - 1}
+              title="Next page"
+            >›</button>
+            <button
+              className="lb-page-btn"
+              onClick={() => setPage(totalPages - 1)}
+              disabled={page === totalPages - 1}
+              title="Last page"
+            >»</button>
           </div>
         )}
 
         <div className="lb-footer">
           <span className="lb-count">
-            {status === 'loaded' ? `${data.length} bot${data.length !== 1 ? 's' : ''} ranked` : '—'}
+            {status === 'loaded'
+              ? `${total} bot${total !== 1 ? 's' : ''} ranked · click a row to challenge`
+              : '—'}
           </span>
           <button
             className="lb-refresh"
-            onClick={fetchLeaders}
+            onClick={() => { setPage(0); fetchLeaders(0); }}
             disabled={status === 'loading'}
           >
             <span className={`lb-refresh-icon ${status === 'loading' ? 'spinning' : ''}`}>↻</span>
@@ -323,6 +454,14 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
         </div>
 
       </div>
+
+      {challengeBot && (
+        <ChallengeModal
+          bot={challengeBot}
+          isDark={isDark}
+          onClose={() => setChallengeBot(null)}
+        />
+      )}
     </>
   );
 };

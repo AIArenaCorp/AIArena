@@ -734,12 +734,16 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
   }
 
   const handleWeightChange = (key: string, newValue: string) => {
-    const numValue = Math.max(0, parseInt(newValue) || 0);
-    const otherWeightsTotal = Object.entries(weights)
-      .filter(([k]) => k !== key).reduce((sum, [_, val]) => sum + val, 0);
-    if (otherWeightsTotal + numValue <= 300) {
-      setWeights(prev => ({ ...prev, [key]: numValue }));
-    }
+      const max = key === 'depth' ? 4 : Infinity;
+      const numValue = Math.max(0, Math.min(max, parseInt(newValue) || 0));
+
+      const otherWeightsTotal = Object.entries(weights)
+        .filter(([k]) => k !== key)
+        .reduce((sum, [_, val]) => sum + val, 0);
+
+      if (otherWeightsTotal + numValue <= 300) {
+        setWeights(prev => ({ ...prev, [key]: numValue }));
+      }
   };
 
   useEffect(() => {
@@ -907,7 +911,10 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
             </div>
             {Object.entries(weights).map(([key, val]) => (
               <div className="weight-row" key={key}>
-                <span className="weight-label">{key.replace(/([A-Z])/g, ' $1')}</span>
+                <span className="weight-label">
+                  {key.replace(/([A-Z])/g, ' $1')}
+                  {key === 'depth' && ' (max 4)'}
+                </span>
                 <input
                   className="weight-input"
                   type="text"
