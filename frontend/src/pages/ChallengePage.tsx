@@ -5,43 +5,6 @@ import { getMinimaxColScores, updateMinimaxWeights } from "../api/c4_minimax_age
 
 // ── Reuse exact same theme tokens as Connect4Board ──────────────────────────
 
-const getDarkStyles = () => `
-  .ch-root {
-    --bg: #0a0a12;
-    --panel-bg: #0f0f1e;
-    --panel-border: #1e1e3a;
-    --accent-red: #ff2244;
-    --accent-yellow: #ffd600;
-    --accent-blue: #1a3fff;
-    --board-bg: #0a1aff;
-    --text-primary: #e8e8ff;
-    --text-muted: #6666aa;
-    --glow-red: 0 0 20px #ff224488, 0 0 40px #ff224444;
-    --glow-yellow: 0 0 20px #ffd60088, 0 0 40px #ffd60044;
-    --glow-blue: 0 0 20px #1a3fff88;
-    --neon-green: #00ff88;
-    --input-bg: #0a0a1a;
-    --shadow-panel: 0 4px 40px #00000088;
-    --shadow-board: 0 0 0 3px #0011cc, 0 8px 60px #0a1aff88, 0 0 80px #0a1aff44, inset 0 2px 0 #4466ff44;
-    --cell-empty: radial-gradient(circle at 35% 35%, #1a1a2e, #08080f);
-    --cell-empty-hover: radial-gradient(circle at 35% 35%, #1a1a3e, #101020);
-    --cell-empty-inset: inset 0 3px 8px #00000088, inset 0 -1px 3px #ffffff08;
-    --topbar-bg: #0f0f1e;
-    --topbar-border: #1e1e3a;
-    --score-bg: #0f0f1e;
-  }
-  .ch-root::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 50%, #0a1aff18 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 80% 30%, #ff224412 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-`;
-
 const getLightStyles = () => `
   .ch-root {
     --bg: #eef1fa;
@@ -544,9 +507,9 @@ type BotWeights = {
   opponent4: number; opponent3: number; opponent2: number;
 };
 type Bot = { bot_name: string; username: string; elo: number; weights?: BotWeights; };
-type Props = { isDark?: boolean; setIsDark?: (v: boolean) => void; };
 
-export default function ChallengePage({ isDark = false, setIsDark }: Props) {
+
+export default function ChallengePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const bot: Bot | undefined = location.state?.bot;
@@ -607,11 +570,6 @@ export default function ChallengePage({ isDark = false, setIsDark }: Props) {
       setIsLoading(false);
       return;
     }
-    if (data.result?.[0] === "win") {
-      setWinner(data.result[1]);
-      setIsLoading(false);
-      return;
-    }
 
     // Bot move (bot is yellow = -1), uses bot's saved weights via minimax
     const scoresMap = await getMinimaxColScores(data.board, -1);
@@ -637,7 +595,7 @@ export default function ChallengePage({ isDark = false, setIsDark }: Props) {
 
   return (
     <>
-      <style>{BASE_STYLES + (isDark ? getDarkStyles() : getLightStyles())}</style>
+      <style>{BASE_STYLES + getLightStyles()}</style>
       <div className="ch-root">
 
         {/* ── Topbar ── */}
@@ -648,17 +606,6 @@ export default function ChallengePage({ isDark = false, setIsDark }: Props) {
           </div>
           <div className="ch-topbar-right">
             {isLoading && <div className="ch-loading-dots"><span /><span /><span /></div>}
-            {setIsDark && (
-              <button
-                className="ch-theme-toggle"
-                onClick={() => setIsDark(!isDark)}
-                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                <div className={`ch-theme-knob ${isDark ? 'is-dark' : 'is-light'}`}>
-                  {isDark ? '☀️' : '🌙'}
-                </div>
-              </button>
-            )}
           </div>
         </div>
 
