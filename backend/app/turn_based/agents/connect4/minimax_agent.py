@@ -16,31 +16,52 @@ class MiniMaxConnect4Agent:
 
 
     # runs the minimax algo and return the best move for game and al scores for each move
-    def minimax(self, gamestate, depth, is_maximizing_player):
-        #base cases (end of tree traversal score final boarx state)
+    def minimax(self, gamestate, depth, is_maximizing_player, alpha=-1000, beta=1000):
+        # base case
         if (depth >= self.weights['depth'] or self.is_game_over(gamestate)):
-            return self.eval_fun( gamestate, self.piece, self.weights['create4'], self.weights['create3'], self.weights['create2'], self.weights['opponent4'], self.weights['opponent3'], self.weights['opponent2'])
+            return self.eval_fun(
+                gamestate,
+                self.piece,
+                self.weights['create4'],
+                self.weights['create3'],
+                self.weights['create2'],
+                self.weights['opponent4'],
+                self.weights['opponent3'],
+                self.weights['opponent2']
+            )
 
         moves = self.get_moves(gamestate)
         if not moves:
             return 0
 
-        #recursive call
         if is_maximizing_player:
             best_score = -1000
             for row, col in moves:
                 gamestate[row][col] = self.piece
-                score = self.minimax(gamestate, depth + 1, False)
-                gamestate[row][col] = 0  
+                score = self.minimax(gamestate, depth + 1, False, alpha, beta)
+                gamestate[row][col] = 0
+
                 best_score = max(best_score, score)
+                alpha = max(alpha, best_score)
+
+                if beta <= alpha:   # PRUNE
+                    break
+
             return best_score
+
         else:
             best_score = 1000
             for row, col in moves:
                 gamestate[row][col] = -self.piece
-                score = self.minimax(gamestate, depth + 1, True)
-                gamestate[row][col] = 0  
+                score = self.minimax(gamestate, depth + 1, True, alpha, beta)
+                gamestate[row][col] = 0
+
                 best_score = min(best_score, score)
+                beta = min(beta, best_score)
+
+                if beta <= alpha:   # PRUNE
+                    break
+
             return best_score
 
     def get_col_scores(self, gamestate):
@@ -52,77 +73,62 @@ class MiniMaxConnect4Agent:
             branch_board[row][col] = self.piece
             score = self.minimax(branch_board, 1, False)
             col_scores[col] = score
-
-        # print(f"weights {self.weights}")
-        # print("pretty gamestate:")
-        # for row in gamestate:
-        #     print(row)
-        # print(f"col scores: {col_scores}")
         return col_scores
 
-
-    # scores a board state for the max player
     def eval_fun(self, gamestate, player, create4_weight, create3_weight, create2_weight, opponent4_weight, opponent3_weight, opponent2_weight):
-        gamestate_score = 0
+        score = 0
+        windows = self.get_all_windows(gamestate)
 
-        gamestate_score += self.count_n_in_a_row(gamestate, player, 4) * create4_weight
-        gamestate_score += self.count_n_in_a_row(gamestate, player, 3) * create3_weight
-        gamestate_score += self.count_n_in_a_row(gamestate, player, 2) * create2_weight
+        for window in windows:
+            score += self.score_window(window, player, create4_weight, create3_weight, create2_weight)
+            score -= self.score_window(window, -player, opponent4_weight, opponent3_weight, opponent2_weight)
 
-        gamestate_score -= self.count_n_in_a_row(gamestate, -player, 4) * opponent4_weight
-        gamestate_score -= self.count_n_in_a_row(gamestate, -player, 3) * opponent3_weight
-        gamestate_score -= self.count_n_in_a_row(gamestate, -player, 2) * opponent2_weight
-        
+        return score
 
-        return gamestate_score
-    
-    def count_n_in_a_row(self, gamestate, player, n):
-        count = 0
-        directions = [
-            (0, 1),   # horizontal
-            (1, 0),   # vertical
-            (1, 1),   # diagonal down-right
-            (1, -1)   # diagonal down-left
-        ]
 
+    def score_window(self, window, player, w4, w3, w2):
+        """Score a single 4-cell window for the given player."""
+        player_count = window.count(player)
+        empty_count = window.count(0)
+        opp_count = 4 - player_count - empty_count
+
+        if opp_count > 0:
+            return 0
+
+        if player_count == 4:
+            return w4     
+        elif player_count == 3:
+            return w3       
+        elif player_count == 2:
+            return w2       
+        return 0
+
+
+    def get_all_windows(self, gamestate):
+        """Extract every horizontal, vertical, and diagonal window of size 4."""
+        windows = []
+
+        # Horizontal
         for row in range(self.ROWS):
+            for col in range(self.COLS - 3):
+                windows.append([gamestate[row][col + i] for i in range(4)])
+
+        # Vertical
+        for row in range(self.ROWS - 3):
             for col in range(self.COLS):
-                if gamestate[row][col] != player:
-                    continue
+                windows.append([gamestate[row + i][col] for i in range(4)])
 
-                for dr, dc in directions:
-                    # Only count sequences that START here (not mid-chain)
-                    prev_r = row - dr
-                    prev_c = col - dc
-                    if (0 <= prev_r < self.ROWS and 
-                        0 <= prev_c < self.COLS and 
-                        gamestate[prev_r][prev_c] == player):
-                        continue  # this is mid-chain, skip
+        # Diagonal down-right
+        for row in range(self.ROWS - 3):
+            for col in range(self.COLS - 3):
+                windows.append([gamestate[row + i][col + i] for i in range(4)])
 
-                    # Count how long the chain actually is from here
-                    length = 0
-                    r, c = row, col
-                    while (0 <= r < self.ROWS and 
-                        0 <= c < self.COLS and 
-                        gamestate[r][c] == player):
-                        length += 1
-                        r += dr
-                        c += dc
+        # Diagonal down-left
+        for row in range(self.ROWS - 3):
+            for col in range(3, self.COLS):
+                windows.append([gamestate[row + i][col - i] for i in range(4)])
 
-                    if length != n:
-                        continue
-
-                    # Check open ends
-                    before_r, before_c = row - dr, col - dc
-                    after_r, after_c = row + n * dr, col + n * dc
-
-                    before_playable = self.is_playable(gamestate, before_r, before_c)
-                    after_playable = self.is_playable(gamestate, after_r, after_c)
-
-                    if before_playable or after_playable:
-                        count += 1
-
-        return count
+        return windows
             
     def is_playable(self, board, row, col):
 
