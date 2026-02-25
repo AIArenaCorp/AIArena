@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
-from backend.app.agents.connect4.validator import Connect4AIWeights
-from backend.app.agents.connect4.minimax_agent import MiniMaxConnect4Agent
+from backend.app.turn_based.agents.connect4.validator import Connect4AIWeights
+from backend.app.turn_based.agents.connect4.minimax_agent import MiniMaxConnect4Agent
 
 router = APIRouter(prefix="/agent/minimax", tags=["connect4"])
 

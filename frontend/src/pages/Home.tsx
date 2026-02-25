@@ -1,27 +1,5 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import LeaderboardTable from '../components/Leaderboard';
-
-const DARK = {
-  bg: '#0a0a12',
-  panelBg: '#0f0f1e',
-  border: '#1e1e3a',
-  textPrimary: '#e8e8ff',
-  textMuted: '#6666aa',
-  accentBlue: '#1a3fff',
-  accentBlueGlow: '#1a3fff88',
-  neonGreen: '#00ff88',
-  neonGreenGlow: '#00ff8888',
-  inputBg: '#0a0a1a',
-  navShadow: '0 1px 12px #00000044',
-  panelShadow: '0 4px 40px #00000088',
-  panelInset: 'inset 0 1px 0 #ffffff0a',
-  radial1: '#0a1aff18',
-  radial2: '#ff224412',
-  sectionLine: '#1e1e3a',
-  comingSoonBg: '#0f0f1e',
-  comingSoonBorder: '#1e1e3a',
-};
 
 const LIGHT = {
   bg: '#eef1fa',
@@ -55,13 +33,13 @@ const GAMES = [
     accent: '#2244dd',
   },
   {
-    id: 'tictactoe',
-    name: 'Tic-Tac-Toe',
-    description: 'Classic 3×3 strategy. Coming soon with full AI tuning support.',
-    route: null,
-    status: 'soon',
-    icon: '✕',
-    accent: '#9944dd',
+    id: 'tanks',
+    name: 'Tanks',
+    description: 'Real-time arena combat. Move, aim, and fire — bullets bounce off walls.',
+    route: '/tanks',
+    status: 'live',
+    icon: '🪖',
+    accent: '#e5112e',
   },
   {
     id: 'chess',
@@ -74,7 +52,7 @@ const GAMES = [
   },
 ];
 
-const homeStyles = (t: typeof DARK) => `
+const homeStyles = (t: typeof LIGHT) => `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -161,43 +139,6 @@ const homeStyles = (t: typeof DARK) => `
     box-shadow: 0 0 16px ${t.accentBlueGlow};
   }
 
-  /* Theme toggle */
-  .home-theme-toggle {
-    width: 52px;
-    height: 28px;
-    border-radius: 14px;
-    border: 1px solid ${t.border};
-    background: ${t.inputBg};
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .home-theme-toggle:hover {
-    border-color: ${t.accentBlue};
-    box-shadow: 0 0 12px ${t.accentBlueGlow};
-  }
-
-  .home-theme-knob {
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: ${t.accentBlue};
-    top: 2px;
-    transition: transform 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-  }
-
-  .home-theme-knob.is-dark  { transform: translateX(3px); }
-  .home-theme-knob.is-light { transform: translateX(27px); }
 
   /* Hero */
   .home-hero {
@@ -391,8 +332,7 @@ const homeStyles = (t: typeof DARK) => `
 `;
 
 const Home = () => {
-  const [isDark, setIsDark] = useState(false);
-  const t = isDark ? DARK : LIGHT;
+  const t = LIGHT;
 
   return (
     <>
@@ -404,15 +344,6 @@ const Home = () => {
           <span className="home-nav-title">AI ARENA</span>
           <div className="home-nav-right">
             <Link to="/create" className="home-nav-link">Play Connect Four →</Link>
-            <button
-              className="home-theme-toggle"
-              onClick={() => setIsDark(d => !d)}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              <div className={`home-theme-knob ${isDark ? 'is-dark' : 'is-light'}`}>
-                {isDark ? '☀️' : '🌙'}
-              </div>
-            </button>
           </div>
         </nav>
 
@@ -462,7 +393,7 @@ const Home = () => {
           {/* Leaderboard */}
           <div className="home-section-title">Leaderboard · Connect Four</div>
           <div className="home-panel">
-            <LeaderboardTable isDark={isDark} />
+            <LeaderboardTable />
           </div>
 
         </div>

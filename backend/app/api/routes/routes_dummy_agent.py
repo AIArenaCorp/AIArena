@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body
-from backend.app.agents.connect4.validator import Connect4AIWeights
-from backend.app.agents.connect4.dummy import DummyConnect4Agent
+from backend.app.turn_based.agents.connect4.validator import Connect4AIWeights
+from backend.app.turn_based.agents.connect4.dummy import DummyConnect4Agent
 
 router = APIRouter(prefix="/agent/dummy", tags=["connect4"])
 

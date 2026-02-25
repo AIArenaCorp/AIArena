@@ -1,5 +1,5 @@
 from typing import Type
-from backend.app.games.game import Game
+from backend.app.turn_based.games.game import Game
 
 class GameController:
     def __init__(self, game_cls: Type[Game]):

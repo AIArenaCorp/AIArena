@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks
 from backend.app.db.db import get_database
 from backend.app.core.run_battle import run_battle, calculate_elo
-from backend.app.agents.connect4.validator import UserSubmission
+from backend.app.turn_based.agents.connect4.validator import UserSubmission
 
 router = APIRouter(prefix="/leaderboard", tags=["connect4"])
 
