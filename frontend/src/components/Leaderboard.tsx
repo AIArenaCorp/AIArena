@@ -256,19 +256,6 @@ const BASE_STYLES = `
   .lb-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 `;
 
-const DARK_TOKENS = `
-  .lb-wrap {
-    --lb-border:        #1e1e3a;
-    --lb-muted:         #6666aa;
-    --lb-text:          #e8e8ff;
-    --lb-accent:        #1a3fff;
-    --lb-green:         #00ff88;
-    --lb-green-glow:    #00ff8866;
-    --lb-row-bg:        #0a0a1a;
-    --lb-row-hover-bg:  #0f0f1e;
-  }
-`;
-
 const LIGHT_TOKENS = `
   .lb-wrap {
     --lb-border:        #dde1f0;
@@ -295,12 +282,11 @@ export type Bot = {
 };
 
 type Status = 'loading' | 'loaded' | 'error' | 'empty';
-type Props = { isDark?: boolean };
 
 // ✅ PAGE_SIZE is a module-level constant — fine outside the component
 const PAGE_SIZE = 10;
 
-const LeaderboardTable = ({ isDark = false }: Props) => {
+const LeaderboardTable = () => {
   // ✅ All useState calls are inside the component
   const [data, setData] = useState<Bot[]>([]);
   const [status, setStatus] = useState<Status>('loading');
@@ -331,6 +317,7 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
     }
   };
 
+  // ✅ Runs on mount and whenever page changes
   useEffect(() => { fetchLeaders(page); }, [page]);
 
   const rankClass = (globalIndex: number) =>
@@ -338,7 +325,7 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
 
   return (
     <>
-      <style>{BASE_STYLES + (isDark ? DARK_TOKENS : LIGHT_TOKENS)}</style>
+      <style>{BASE_STYLES + LIGHT_TOKENS}</style>
       <div className="lb-wrap">
 
         <div className="lb-header">
@@ -458,7 +445,6 @@ const LeaderboardTable = ({ isDark = false }: Props) => {
       {challengeBot && (
         <ChallengeModal
           bot={challengeBot}
-          isDark={isDark}
           onClose={() => setChallengeBot(null)}
         />
       )}

@@ -181,22 +181,6 @@ const modalStyles = `
   }
 `;
 
-const DARK_TOKENS = `
-  .cm-modal {
-    --cm-bg:           #0f0f1e;
-    --cm-border:       #1e1e3a;
-    --cm-text:         #e8e8ff;
-    --cm-muted:        #6666aa;
-    --cm-accent:       #1a3fff;
-    --cm-accent-light: #4466ff;
-    --cm-accent-glow:  #1a3fff66;
-    --cm-green:        #00ff88;
-    --cm-green-glow:   #00ff8866;
-    --cm-row-bg:       #0a0a1a;
-    --cm-shadow:       0 8px 60px #00000088, inset 0 1px 0 #ffffff0a;
-  }
-`;
-
 const LIGHT_TOKENS = `
   .cm-modal {
     --cm-bg:           #ffffff;
@@ -222,9 +206,9 @@ type Bot = {
     opponent4: number; opponent3: number; opponent2: number;
   };
 };
-type Props = { bot: Bot; isDark?: boolean; onClose: () => void; };
+type Props = { bot: Bot; onClose: () => void; };
 
-const ChallengeModal = ({ bot, isDark = false, onClose }: Props) => {
+const ChallengeModal = ({ bot, onClose }: Props) => {
   const navigate = useNavigate();
 
   const handleChallenge = () => {
@@ -238,7 +222,7 @@ const ChallengeModal = ({ bot, isDark = false, onClose }: Props) => {
 
   return (
     <>
-      <style>{modalStyles + (isDark ? DARK_TOKENS : LIGHT_TOKENS)}</style>
+      <style>{modalStyles + LIGHT_TOKENS}</style>
       <div className="cm-overlay" onClick={handleOverlayClick}>
         <div className="cm-modal">
           <button className="cm-close" onClick={onClose}>✕</button>

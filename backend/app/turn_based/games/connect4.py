@@ -1,4 +1,4 @@
-from backend.app.games.game import Game
+from backend.app.turn_based.games.game import Game
 
 
 class Connect4(Game):

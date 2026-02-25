@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header
-from backend.app.services.game_controller import GameController
-from backend.app.games.connect4 import Connect4
+from backend.app.turn_based.services.game_controller import GameController
+from backend.app.turn_based.games.connect4 import Connect4
 import time
 
 router = APIRouter(prefix="/connect4", tags=["connect4"])

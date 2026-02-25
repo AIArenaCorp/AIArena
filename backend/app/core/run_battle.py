@@ -1,6 +1,6 @@
-from backend.app.agents.connect4.minimax_agent import MiniMaxConnect4Agent
-from backend.app.services.game_controller import GameController
-from backend.app.games.connect4 import Connect4
+from backend.app.turn_based.agents.connect4.minimax_agent import MiniMaxConnect4Agent
+from backend.app.turn_based.services.game_controller import GameController
+from backend.app.turn_based.games.connect4 import Connect4
 
 def run_battle(weights_a, weights_b):
     game = GameController(Connect4)

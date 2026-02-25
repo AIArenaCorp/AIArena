@@ -4,45 +4,6 @@ import { getBoard, makeMove, resetGame } from "../api/connect4";
 import { getDummyMove, updateDummyAIWeights } from "../api/c4_dummy_agent";
 import { getMinimaxColScores, updateMinimaxWeights, submitAIBot } from "../api/c4_minimax_agent";
 
-const getDarkStyles = () => `
-  .c4-root {
-    --bg: #0a0a12;
-    --panel-bg: #0f0f1e;
-    --panel-border: #1e1e3a;
-    --panel-border-rgb: 30,30,58;
-    --accent-red: #ff2244;
-    --accent-yellow: #ffd600;
-    --accent-blue: #1a3fff;
-    --board-bg: #0a1aff;
-    --text-primary: #e8e8ff;
-    --text-muted: #6666aa;
-    --glow-red: 0 0 20px #ff224488, 0 0 40px #ff224444;
-    --glow-yellow: 0 0 20px #ffd60088, 0 0 40px #ffd60044;
-    --glow-blue: 0 0 20px #1a3fff88;
-    --neon-green: #00ff88;
-    --input-bg: #0a0a1a;
-    --bar-track: #1a1a2e;
-    --shadow-panel: 0 4px 40px #00000088;
-    --shadow-board: 0 0 0 3px #0011cc, 0 8px 60px #0a1aff88, 0 0 80px #0a1aff44, inset 0 2px 0 #4466ff44;
-    --cell-empty: radial-gradient(circle at 35% 35%, #1a1a2e, #08080f);
-    --cell-empty-hover: radial-gradient(circle at 35% 35%, #1a1a3e, #101020);
-    --cell-empty-inset: inset 0 3px 8px #00000088, inset 0 -1px 3px #ffffff08;
-    --score-bg: #0f0f1e;
-    --topbar-bg: #0f0f1e;
-    --topbar-border: #1e1e3a;
-  }
-  .c4-root::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 50%, #0a1aff18 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 80% 30%, #ff224412 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-`;
-
 const getLightStyles = () => `
   .c4-root {
     --bg: #eef1fa;
@@ -192,42 +153,6 @@ const BASE_STYLES = `
     transition: all 0.3s;
   }
 
-  .c4-theme-toggle {
-    width: 52px;
-    height: 28px;
-    border-radius: 14px;
-    border: 1px solid var(--panel-border);
-    background: var(--panel-bg);
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .c4-theme-toggle:hover {
-    border-color: var(--accent-blue);
-    box-shadow: var(--glow-blue);
-  }
-
-  .c4-theme-toggle-knob {
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--accent-blue);
-    top: 2px;
-    transition: transform 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-  }
-
-  .c4-theme-toggle-knob.is-dark { transform: translateX(3px); }
-  .c4-theme-toggle-knob.is-light { transform: translateX(27px); }
 
   .c4-left-panel, .c4-right-panel {
     padding: 20px 16px;
@@ -668,9 +593,8 @@ const BASE_STYLES = `
     .c4-board-wrap { padding: 14px; }
   }
 `;
-type BoardProps = { isDark: boolean; setIsDark: (v: boolean) => void; };
 
-export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
+export default function Connect4Board() {
   const [board, setBoard] = useState<number[][]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [winner, setWinner] = useState<number | null>(null);
@@ -734,16 +658,12 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
   }
 
   const handleWeightChange = (key: string, newValue: string) => {
-      const max = key === 'depth' ? 4 : Infinity;
-      const numValue = Math.max(0, Math.min(max, parseInt(newValue) || 0));
-
-      const otherWeightsTotal = Object.entries(weights)
-        .filter(([k]) => k !== key)
-        .reduce((sum, [_, val]) => sum + val, 0);
-
-      if (otherWeightsTotal + numValue <= 300) {
-        setWeights(prev => ({ ...prev, [key]: numValue }));
-      }
+    const numValue = Math.max(0, parseInt(newValue) || 0);
+    const otherWeightsTotal = Object.entries(weights)
+      .filter(([k]) => k !== key).reduce((sum, [_, val]) => sum + val, 0);
+    if (otherWeightsTotal + numValue <= 300) {
+      setWeights(prev => ({ ...prev, [key]: numValue }));
+    }
   };
 
   useEffect(() => {
@@ -838,7 +758,7 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
 
   return (
     <>
-      <style>{BASE_STYLES + (isDark ? getDarkStyles() : getLightStyles())}</style>
+      <style>{BASE_STYLES + getLightStyles()}</style>
       <div className="c4-root">
 
         {/* ─── Top Bar ─── */}
@@ -862,15 +782,6 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
               title="Toggle leaderboard"
             >
               🏆 Leaderboard
-            </button>
-            <button
-              className="c4-theme-toggle"
-              onClick={() => setIsDark(d => !d)}
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              <div className={`c4-theme-toggle-knob ${isDark ? 'is-dark' : 'is-light'}`}>
-                {isDark ? '☀️' : '🌙'}
-              </div>
             </button>
           </div>
         </div>
@@ -911,10 +822,7 @@ export default function Connect4Board({ isDark, setIsDark }: BoardProps) {
             </div>
             {Object.entries(weights).map(([key, val]) => (
               <div className="weight-row" key={key}>
-                <span className="weight-label">
-                  {key.replace(/([A-Z])/g, ' $1')}
-                  {key === 'depth' && ' (max 4)'}
-                </span>
+                <span className="weight-label">{key.replace(/([A-Z])/g, ' $1')}</span>
                 <input
                   className="weight-input"
                   type="text"
