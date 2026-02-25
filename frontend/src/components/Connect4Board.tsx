@@ -605,6 +605,7 @@ export default function Connect4Board() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   const [moveCount, setMoveCount] = useState(0);
+  const [lastAIMove, setLastAIMove] = useState<number | null>(null);
   const [weights, setWeights] = useState({
     depth: 1, create4: 1, create3: 1, create2: 1,
     opponent4: 1, opponent3: 1, opponent2: 1,
@@ -623,11 +624,24 @@ export default function Connect4Board() {
   const remaining = 300 - totalPoints;
 
   function getBestMove(scoresMap: Record<string, number>) {
-    let bestCol = -1, bestScore = -Infinity;
+    let bestScore = -Infinity;
+    let bestCols: number[] = [];
+
     Object.entries(scoresMap).forEach(([col, score]) => {
-      if (score > bestScore) { bestScore = score; bestCol = parseInt(col); }
-    });
-    return bestCol !== -1 ? bestCol : 0;
+        const colNum = parseInt(col);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestCols = [colNum]; // reset with new best
+        } else if (score === bestScore) {
+          bestCols.push(colNum); // tie → add to list
+        }
+      });
+
+      if (bestCols.length === 0) return 0;
+
+      const randomIndex = Math.floor(Math.random() * bestCols.length);
+      return bestCols[randomIndex];
   }
 
   function getBestColIndex(scoresMap: Record<string, number>) {
@@ -678,9 +692,11 @@ export default function Connect4Board() {
         if (isMinimaxTurn) {
           const scoresMap = await getMinimaxColScores(board, 1);
           setCurrentScores(scoresMap);
-          col = getBestMove(scoresMap);
+          col = getBestMove(scoresMap);   // choose ONCE
+          setLastAIMove(col);      
         } else {
           col = await getDummyMove(board);
+          setLastAIMove(col);
         }
         const data = await makeMove(col);
         if (data.result?.[0] === "win") {
@@ -725,6 +741,7 @@ export default function Connect4Board() {
       setCurrentScores(scoresMap);
       const bestCol = getBestMove(scoresMap);
       const aiData = await makeMove(bestCol);
+      setLastAIMove(bestCol);
       setMoveCount(c => c + 1);
       if (aiData.result?.[0] === "win") {
         setBoard(aiData.board);
@@ -748,7 +765,7 @@ export default function Connect4Board() {
 
   const barPercent = Math.min((totalPoints / 300) * 100, 100);
   const barColor = remaining < 0 ? 'var(--accent-red)' : remaining === 0 ? 'var(--neon-green)' : 'var(--accent-blue)';
-  const bestCol = Object.keys(currentScores).length > 0 ? getBestColIndex(currentScores) : -1;
+  const bestCol = lastAIMove ?? -1;
   const cols = board[0]?.length || 7;
 
   const flat = board.flat();
